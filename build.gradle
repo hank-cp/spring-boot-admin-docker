@@ -1,0 +1,76 @@
+buildscript {
+	repositories {
+		jcenter()
+		mavenCentral()
+		maven { url 'http://repo.spring.io/plugins-release' }
+	}
+	dependencies {
+		classpath "org.springframework.boot:spring-boot-gradle-plugin:1.5.19.RELEASE"
+	}
+}
+
+plugins {
+	id 'com.bmuschko.docker-java-application' version '4.7.1'
+}
+
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'org.springframework.boot'
+
+//*************************************************************************
+// IDEA
+//*************************************************************************
+
+apply plugin: 'idea'
+
+idea {
+	module {
+		inheritOutputDirs = true
+		downloadSources = true
+	}
+}
+
+//*************************************************************************
+// Project Config
+//*************************************************************************
+
+group = 'com.laxture'
+version = "$ver"
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+tasks.withType(AbstractCompile) {
+	options.encoding = 'UTF-8'
+}
+tasks.withType(Javadoc) {
+	options.encoding = 'UTF-8'
+}
+
+mainClassName = 'com.laxture.sbad.SpringBootAdminDockerApplication'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	implementation "de.codecentric:spring-boot-admin-starter-server:$ver"
+	implementation "de.codecentric:spring-boot-admin-server-ui:$ver"
+}
+
+docker {
+	javaApplication {
+		baseImage = 'openjdk'
+		tag = "${project.name}:${ver}"
+		ports = [Integer.valueOf(port)]
+	}
+}
+
+dockerCreateDockerfile {
+	label(['maintainer': 'Hank_CP "true.cp@gmail.com"',
+		   'version': ver])
+	environmentVariable 'JAVA_OPTS', '-XX:NewSize=192m -XX:+UseParallelOldGC -XX:+UseAdaptiveSizePolicy -XX:MaxGCPauseMillis=1000 -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom'
+}
